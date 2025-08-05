@@ -1,0 +1,23 @@
+--- a/config/utils/utils.go
++++ b/config/utils/utils.go
+@@ -30,6 +30,12 @@ const (
+ 	UserAppConfig = ".config/" + _configPath
+ )
+ 
++// OpenWrt specific config path
++const (
++	OpenWrtConfigDir  = "/etc/podman-tui"
++	OpenWrtConfigFile = "/etc/podman-tui/podman-tui.json"
++)
++
+ var ErrRemotePodmanUDSReport = errors.New("remote podman failed to report its UDS socket")
+ 
+ func ConfigPath() (string, error) {
++	// Check for OpenWrt config file first
++	if _, err := os.Stat(OpenWrtConfigFile); err == nil {
++		return OpenWrtConfigFile, nil
++	}
++
+ 	if configHome := os.Getenv("XDG_CONFIG_HOME"); configHome != "" {
+ 		return filepath.Join(configHome, _configPath), nil
+ 	}

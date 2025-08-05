@@ -1,0 +1,92 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+USE_PROCD=1
+NAME=podman-tui
+PROG=/usr/bin/podman-tui
+
+PODMAN_TUI_CONFIG="/etc/config/podman-tui"
+PODMAN_TUI_DIR="/etc/podman-tui"
+PODMAN_TUI_JSON="$PODMAN_TUI_DIR/podman-tui.json"
+
+start_service() {
+	config_load podman-tui
+	
+	local enabled
+	config_get enabled config enabled 0
+	[ "$enabled" -eq 1 ] || return 0
+	
+	# 确保配置目录存在
+	[ -d "$PODMAN_TUI_DIR" ] || mkdir -p "$PODMAN_TUI_DIR"
+	
+	# 生成podman-tui.json配置文件
+	generate_config
+	
+	# 检查podman socket是否运行
+	check_podman_socket
+	
+	# podman-tui是交互式程序，不能作为后台服务运行
+	# 只需要确保配置文件存在即可
+	logger -t podman-tui "Configuration updated. Use 'podman-tui' command via SSH to access."
+}
+
+generate_config() {
+	local config_content='{"connections":{'
+	local first=1
+	local default_conn=""
+	
+	config_foreach process_connection connection
+	
+	# 移除最后的逗号并关闭JSON
+	config_content="${config_content%,}}"
+	
+	# 写入配置文件
+	echo "$config_content" > "$PODMAN_TUI_JSON"
+}
+
+process_connection() {
+	local section="$1"
+	local uri enabled default identity formatted_uri
+	
+	config_get uri "$section" uri
+	config_get enabled "$section" enabled 1
+	config_get default "$section" default 0
+	config_get identity "$section" identity
+	
+	[ "$enabled" -eq 1 ] || return 0
+	[ -n "$uri" ] || return 0
+	
+	# 使用原始URI格式，不再自动处理前缀
+	formatted_uri="$uri"
+	
+	# 添加连接到JSON
+	[ "$first" -eq 0 ] && config_content="$config_content,"
+	config_content="$config_content\"$section\":{"
+	config_content="$config_content\"uri\":\"$formatted_uri\""
+	
+	[ -n "$identity" ] && config_content="$config_content,\"identity\":\"$identity\""
+	[ "$default" -eq 1 ] && config_content="$config_content,\"default\":true"
+	
+	config_content="$config_content}"
+	first=0
+}
+
+check_podman_socket() {
+	local socket_path="/run/podman/podman.sock"
+	
+	if [ ! -S "$socket_path" ]; then
+		logger -t podman-tui "Warning: Podman socket not found at $socket_path"
+		logger -t podman-tui "Make sure podman system service is running"
+	fi
+}
+
+stop_service() {
+	# 没有后台服务需要停止
+	return 0
+}
+
+reload_service() {
+	stop
+	start
+}
