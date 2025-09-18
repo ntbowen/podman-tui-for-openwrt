@@ -1,12 +1,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=podman-tui
-PKG_VERSION:=1.7.0
+PKG_VERSION:=1.8.0
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/containers/podman-tui/archive/v$(PKG_VERSION)
-PKG_HASH:=a94eff698c68bd9b1ed2cbacfbed4c595e514d56c260e0134de951b26fe72f61
+PKG_HASH:=56ac081ec9b920443646bd3735277837cb10db783c52f1e8dc7c140dcd6d0526
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=docs/LICENSE
