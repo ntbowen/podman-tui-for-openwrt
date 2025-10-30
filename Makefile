@@ -1,12 +1,13 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=podman-tui
-PKG_VERSION:=1.8.0
+PKG_VERSION:=1.10.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://github.com/containers/podman-tui/archive/v$(PKG_VERSION)
-PKG_HASH:=56ac081ec9b920443646bd3735277837cb10db783c52f1e8dc7c140dcd6d0526
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/ntbowen/podman-tui.git
+PKG_SOURCE_VERSION:=master-dev
+# PKG_MIRROR_HASH:=d5bea2f8af34f59457af69736213bff7064c07db34cc523a30df29e1ea6350a9
 
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=docs/LICENSE
@@ -46,6 +47,11 @@ define Package/podman-tui/description
   podman-tui is a terminal user interface for podman environment. 
   It uses podman go bindings to communicate with local or remote 
   podman machine (through SSH).
+  
+  Features:
+  - Multi-language support (English, Chinese)
+  - Automatic language detection from system locale
+  - Configurable language settings via UCI
 endef
 
 define Package/podman-tui/conffiles
@@ -74,6 +80,9 @@ define Package/podman-tui/install
 	
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/podman-tui.init $(1)/etc/init.d/podman-tui
+	
+	# Create directory for language config file
+	$(INSTALL_DIR) $(1)/root/.config/podman-tui
 endef
 
 $(eval $(call GoBinPackage,podman-tui))
